@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -19,24 +20,38 @@ import (
 )
 
 func main() {
-	kubeconfigPath := flag.String("kubeconfig-path", os.Getenv("KUBECONFIG"), "Path to kubeconfig file")
+	kubeconfig := flag.String("kubeconfig", os.Getenv("KUBECONFIG"), "Path to kubeconfig file")
 	eventNamespace := flag.String("event-namespace", "gatekeeper-system", "Namespace to listen to events in")
 	flag.Parse()
 
-	config, _ := clientcmd.BuildConfigFromFlags("", *kubeconfigPath)
-	clientset, _ := kubernetes.NewForConfig(config)
+	err := run(*kubeconfig, *eventNamespace)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+}
+
+func run(kubeconfig string, eventNamespace string) error {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		return fmt.Errorf("could not create kubeconfig: %v", err)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("could not create client set: %v", err)
+	}
 
 	ctx := context.Background()
-	w, err := clientset.EventsV1beta1().Events(*eventNamespace).Watch(ctx, metav1.ListOptions{})
+	w, err := clientset.EventsV1beta1().Events(eventNamespace).Watch(ctx, metav1.ListOptions{})
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return fmt.Errorf("could not watch events: %v", err)
 	}
 
 	go watchEvents(w)
 
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":8888", nil)
+	err = http.ListenAndServe(":8888", nil)
+	return err
 }
 
 func watchEvents(w watch.Interface) {
