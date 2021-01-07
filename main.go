@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,14 +19,15 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	kubeconfigPath := flag.String("kubeconfig-path", os.Getenv("KUBECONFIG"), "Path to kubeconfig file")
+	eventNamespace := flag.String("event-namespace", "gatekeeper-system", "Namespace to listen to events in")
+	flag.Parse()
 
-	kubeconfigPath := os.Getenv("KUBECONFIG")
-	config, _ := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	config, _ := clientcmd.BuildConfigFromFlags("", *kubeconfigPath)
 	clientset, _ := kubernetes.NewForConfig(config)
 
-	namespace := "gatekeeper-system"
-	w, err := clientset.EventsV1beta1().Events(namespace).Watch(ctx, metav1.ListOptions{})
+	ctx := context.Background()
+	w, err := clientset.EventsV1beta1().Events(*eventNamespace).Watch(ctx, metav1.ListOptions{})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
