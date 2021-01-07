@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatekeeper-exporter
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: gatekeeper-exporter
+        image: quay.io/xenitab/gatekeeper-exporter:latest
+        ports:
+        - name: metrics
+          containerPort: 8888
+      serviceAccountName: gatekeeper-exporter
