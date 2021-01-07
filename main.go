@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -41,8 +40,7 @@ func run(kubeconfig string, eventNamespace string) error {
 		return fmt.Errorf("could not create client set: %v", err)
 	}
 
-	ctx := context.Background()
-	w, err := clientset.EventsV1beta1().Events(eventNamespace).Watch(ctx, metav1.ListOptions{})
+	w, err := clientset.EventsV1beta1().Events(eventNamespace).Watch(metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("could not watch events: %v", err)
 	}
