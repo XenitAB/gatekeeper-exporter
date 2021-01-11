@@ -54,7 +54,7 @@ func run(kubeconfig string, eventNamespace string) error {
 
 func watchEvents(w watch.Interface) {
 	violations := promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "violation",
+		Name: "gatekeeper_exporter_violation",
 		Help: "Violations events from opa-gatekeeper",
 	}, []string{"kind", "namespace", "name", "message", "constraint_kind", "constraint_name"})
 
