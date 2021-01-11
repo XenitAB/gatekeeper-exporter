@@ -56,7 +56,7 @@ func watchEvents(w watch.Interface) {
 	violations := promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "gatekeeper_exporter_violation",
 		Help: "Violations events from opa-gatekeeper",
-	}, []string{"kind", "namespace", "name", "message", "constraint_kind", "constraint_name"})
+	}, []string{"kind", "resource_namespace", "resource_name", "message", "constraint_kind", "constraint_name", "action"})
 
 	for event := range w.ResultChan() {
 		eventType := strings.ToLower(string(event.Type))
@@ -71,12 +71,13 @@ func watchEvents(w watch.Interface) {
 
 		note := parseNote(e.Note)
 		violations.With(map[string]string{
-			"kind":            e.Regarding.Kind,
-			"namespace":       e.Regarding.Namespace,
-			"name":            e.Regarding.Name,
-			"message":         note["message"],
-			"constraint_kind": e.ObjectMeta.Annotations["constraint_kind"],
-			"constraint_name": e.ObjectMeta.Annotations["constraint_name"],
+			"action":             e.ObjectMeta.Annotations["constraint_action"],
+			"kind":               e.Regarding.Kind,
+			"resource_namespace": e.ObjectMeta.Annotations["resource_namespace"],
+			"resource_name":      e.ObjectMeta.Annotations["resource_name"],
+			"message":            note["message"],
+			"constraint_kind":    e.ObjectMeta.Annotations["constraint_kind"],
+			"constraint_name":    e.ObjectMeta.Annotations["constraint_name"],
 		}).Set(1)
 	}
 }
