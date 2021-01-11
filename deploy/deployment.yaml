@@ -5,9 +5,14 @@ metadata:
 spec:
   replicas: 1
   template:
+    metadata:
+      annotations:
+        ad.datadoghq.com/exporter.check_names: '["openmetrics"]'
+        ad.datadoghq.com/exporter.init_configs: '[{}]'
+        ad.datadoghq.com/exporter.instances: '[{"prometheus_url":"http://%%host%%:8888/metrics","namespace":"opa","metrics":["*"]}]'
     spec:
       containers:
-      - name: gatekeeper-exporter
+      - name: exporter
         image: quay.io/xenitab/gatekeeper-exporter:latest
         ports:
         - name: metrics

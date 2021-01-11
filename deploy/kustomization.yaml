@@ -6,3 +6,6 @@ resources:
 - rbac.yaml
 commonLabels:
   app: gatekeeper-exporter
+images:
+- name: quay.io/xenitab/gatekeeper-exporter
+  newTag: a00ac824
